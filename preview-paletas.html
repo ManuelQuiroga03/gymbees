@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gymbees - Pure Monochrome UI System Preview</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* RESET & BASE */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #000000;
+      color: #EDEDED;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* TOP CONTROLLER */
+    .top-controller {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(10, 10, 10, 0.94);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid #222222;
+      padding: 14px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 2px;
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge span {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--glow);
+    }
+
+    .theme-selector-tabs {
+      display: flex;
+      background: #141414;
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid #262626;
+      gap: 4px;
+    }
+
+    .theme-tab-btn {
+      background: transparent;
+      border: none;
+      color: #888888;
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .theme-tab-btn:hover {
+      color: #FFF;
+    }
+
+    .theme-tab-btn.active {
+      background: #262626;
+      color: #FFF;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+    }
+
+    .tab-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ==========================================================================
+       PURE MONOCHROME THEMES (100% LIBRES DE TONOS ORO / AMARILLO)
+       ========================================================================== */
+
+    /* 1. PURE BLACKOUT (Negro Absoluto + Blanco Puro Brutalista - Estilo Represent 247) */
+    .theme-pure-blackout {
+      --bg-base: #000000;
+      --bg-surface: #0E0E0E;
+      --bg-surface-elevated: #171717;
+      --text-main: #FFFFFF;
+      --text-muted: #8E8E8E;
+      --text-subtle: #555555;
+      --border-subtle: #222222;
+      --border-strong: #383838;
+      --primary: #FFFFFF;
+      --primary-text: #000000;
+      --badge-bg: #1A1A1A;
+      --badge-text: #FFFFFF;
+      --badge-border: #333333;
+      --glow: rgba(255, 255, 255, 0.35);
+      --secondary-btn-bg: transparent;
+      --secondary-btn-text: #FFFFFF;
+      --secondary-btn-border: #333333;
+    }
+
+    /* 2. PLATINUM REFLECTIVE (Titanio Líquido / Plata 3M Reflectante) */
+    .theme-platinum-reflective {
+      --bg-base: #09090B;
+      --bg-surface: #141417;
+      --bg-surface-elevated: #1E1E23;
+      --text-main: #F4F4F5;
+      --text-muted: #94949E;
+      --text-subtle: #5F5F69;
+      --border-subtle: #27272D;
+      --border-strong: #3F3F48;
+      --primary: #E2E8F0;
+      --primary-text: #09090B;
+      --badge-bg: rgba(226, 232, 240, 0.08);
+      --badge-text: #E2E8F0;
+      --badge-border: rgba(226, 232, 240, 0.2);
+      --glow: rgba(226, 232, 240, 0.25);
+      --secondary-btn-bg: #1E1E23;
+      --secondary-btn-text: #F4F4F5;
+      --secondary-btn-border: #27272D;
+    }
+
+    /* 3. BONE & CHALK (Off-White / Tiza Minimalista de Alta Costura Streetwear) */
+    .theme-bone-chalk {
+      --bg-base: #0A0A0A;
+      --bg-surface: #121212;
+      --bg-surface-elevated: #1C1C1C;
+      --text-main: #F5F5F0;
+      --text-muted: #8F8F89;
+      --text-subtle: #5C5C57;
+      --border-subtle: #242423;
+      --border-strong: #383836;
+      --primary: #F0EDE6;
+      --primary-text: #0A0A0A;
+      --badge-bg: rgba(240, 237, 230, 0.08);
+      --badge-text: #F0EDE6;
+      --badge-border: rgba(240, 237, 230, 0.18);
+      --glow: rgba(240, 237, 230, 0.2);
+      --secondary-btn-bg: transparent;
+      --secondary-btn-text: #F0EDE6;
+      --secondary-btn-border: #383836;
+    }
+
+    /* MAIN CONTAINER */
+    .preview-wrapper {
+      flex: 1;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      padding: 0 0 60px 0;
+    }
+
+    /* ANNOUNCEMENT BAR */
+    .announcement-bar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      padding: 10px 16px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .announcement-bar strong {
+      color: var(--text-main);
+      font-weight: 800;
+    }
+
+    /* STORE HEADER */
+    .store-header {
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 18px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-base);
+    }
+
+    .store-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 34px;
+      letter-spacing: 3px;
+      color: var(--text-main);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .store-nav {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .store-nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .store-nav a:hover, .store-nav a.active {
+      color: var(--text-main);
+    }
+
+    .cart-btn-pill {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .cart-btn-pill:hover {
+      border-color: var(--border-strong);
+    }
+
+    .cart-count {
+      background: var(--primary);
+      color: var(--primary-text);
+      font-size: 11px;
+      font-weight: 800;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* HERO SHOWCASE */
+    .hero-banner {
+      padding: 64px 36px;
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 48px;
+      align-items: center;
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    .hero-eyebrow {
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-eyebrow::before {
+      content: "";
+      width: 24px;
+      height: 2px;
+      background: var(--primary);
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(52px, 6.5vw, 84px);
+      line-height: 0.92;
+      letter-spacing: 1px;
+      color: var(--text-main);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .hero-description {
+      color: var(--text-muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 500px;
+      margin-bottom: 32px;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--primary-text);
+      padding: 15px 32px;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px var(--glow);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--secondary-btn-bg);
+      color: var(--secondary-btn-text);
+      border: 1px solid var(--secondary-btn-border);
+      padding: 15px 32px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-main);
+    }
+
+    /* CARD PDP MOCKUP */
+    .product-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .product-badge-float {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      border: 1px solid var(--badge-border);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+
+    .product-img-box {
+      background: var(--bg-surface-elevated);
+      height: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .mockup-artwork {
+      width: 150px;
+      height: 190px;
+      border-radius: 10px;
+      background: #000;
+      border: 1px solid var(--border-strong);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .mockup-artwork svg {
+      width: 52px;
+      height: 52px;
+      fill: var(--text-main);
+    }
+
+    .product-info {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .product-category {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .product-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      line-height: 1.1;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+
+    .product-pricing {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .current-price {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .compare-price {
+      font-size: 15px;
+      color: var(--text-subtle);
+      text-decoration: line-through;
+    }
+
+    .bnpl-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bnpl-note strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    /* MONOCHROME SIZE PILLS */
+    .size-selector-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .size-pills-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .size-pill {
+      flex: 1;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 10px 0;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .size-pill:hover {
+      border-color: var(--border-strong);
+      color: var(--text-main);
+    }
+
+    .size-pill.active {
+      border-color: var(--text-main);
+      color: var(--primary-text);
+      background: var(--text-main);
+      box-shadow: 0 0 14px var(--glow);
+    }
+
+    .size-pill.disabled {
+      opacity: 0.25;
+      text-decoration: line-through;
+      cursor: not-allowed;
+    }
+
+    .add-to-cart-btn {
+      width: 100%;
+      background: var(--primary);
+      color: var(--primary-text);
+      border: none;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 18px var(--glow);
+    }
+
+    /* SPECS & SWATCHES PANEL */
+    .specs-panel {
+      max-width: 1240px;
+      margin: 32px auto;
+      padding: 28px 36px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+    }
+
+    .specs-header {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .swatches-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .swatch-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .swatch-color-box {
+      height: 48px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .swatch-name {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+
+    .swatch-hex {
+      font-size: 12px;
+      font-family: monospace;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 860px) {
+      .hero-banner {
+        grid-template-columns: 1fr;
+        padding: 40px 20px;
+      }
+      .store-nav {
+        display: none;
+      }
+      .top-controller {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .theme-selector-tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+
+<body class="theme-pure-blackout" id="appRoot">
+
+  <!-- TOP CONTROLLER: 100% MONOCHROME -->
+  <div class="top-controller">
+    <div class="brand-meta">
+      <div class="brand-badge">
+        <span></span> GYMBEES PURE MONOCHROME
+      </div>
+      <span style="font-size: 12px; color: #777; border-left: 1px solid #222; padding-left: 12px;">
+        Cero Oro • 100% Escala Tonal Neutra
+      </span>
+    </div>
+
+    <!-- TABS MONOCROMÁTICAS -->
+    <div class="theme-selector-tabs">
+      <button class="theme-tab-btn active" onclick="setTheme('theme-pure-blackout', this)">
+        <span class="tab-dot" style="background: #FFFFFF;"></span>
+        1. Pure Blackout (Negro & Blanco)
+      </button>
+      <button class="theme-tab-btn" onclick="setTheme('theme-platinum-reflective', this)">
+        <span class="tab-dot" style="background: #E2E8F0;"></span>
+        2. Platinum Reflective (Plata 3M)
+      </button>
+      <button class="theme-tab-btn" onclick="setTheme('theme-bone-chalk', this)">
+        <span class="tab-dot" style="background: #F0EDE6;"></span>
+        3. Bone & Chalk (Tiza Minimalista)
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN PREVIEW CONTAINER -->
+  <div class="preview-wrapper">
+
+    <!-- ANNOUNCEMENT BAR (PURA Y MINIMALISTA) -->
+    <div class="announcement-bar">
+      <span>ENVÍO GRATIS A TODO MÉXICO EN PEDIDOS SUPERIORES A <strong>$1,299 MXN</strong></span>
+      <span>•</span>
+      <span>PAGA EN 4 QUINCENAS CON <strong>KUESKI PAY</strong></span>
+    </div>
+
+    <!-- STORE HEADER -->
+    <header class="store-header">
+      <a href="#" class="store-logo">
+        GYMBEES
+      </a>
+
+      <nav class="store-nav">
+        <a href="#" class="active">NUEVO DROP</a>
+        <a href="#">PUMP COVERS</a>
+        <a href="#">COMPRESIÓN</a>
+        <a href="#">BAGGYS</a>
+        <a href="#">ACCESORIOS</a>
+      </nav>
+
+      <div class="store-actions">
+        <button class="cart-btn-pill">
+          <span>BOLSA</span>
+          <span class="cart-count">2</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- HERO SHOWCASE -->
+    <section class="hero-banner">
+      <div>
+        <div class="hero-eyebrow">COLECCIÓN HEAVYWEIGHT 2026</div>
+        <h1 class="hero-title">FORJADO PARA<br>EL HIERRO</h1>
+        <p class="hero-description">
+          Siluetas masivas de 240 GSM. Una dirección de arte 100% monocromática: sin distracciones de color, con contraste puro blanco y negro para destacar el arte gráfico y la anatomía del atleta.
+        </p>
+        <div class="hero-ctas">
+          <button class="btn-primary">COMPRAR DROP ACTIVO</button>
+          <button class="btn-secondary">EXPLORAR CATÁLOGO</button>
+        </div>
+      </div>
+
+      <!-- CARD PDP MOCKUP INLINE -->
+      <div class="product-card">
+        <div class="product-badge-float">EDICIÓN LIMITADA • DROP 01</div>
+        <div class="product-img-box">
+          <div class="mockup-artwork">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+            </svg>
+            <span style="font-size: 11px; font-weight: 700; color: #FFF; letter-spacing: 1px;">NOLAN OVERSIZED</span>
+            <span style="font-size: 9px; color: var(--text-muted); font-family: monospace;">240 GSM HEAVYWEIGHT</span>
+          </div>
+        </div>
+
+        <div class="product-info">
+          <div class="product-category">PUMP COVERS • SERIE PESADA</div>
+          <h2 class="product-name">Nolan Heavy Pump Cover</h2>
+          
+          <div class="product-pricing">
+            <span class="current-price">$649 MXN</span>
+            <span class="compare-price">$799 MXN</span>
+          </div>
+
+          <div class="bnpl-note">
+            <span>O 4 pagos de <strong>$162.25 MXN</strong> sin tarjeta vía Kueski Pay</span>
+          </div>
+
+          <div class="size-selector-label">
+            <span>SELECCIONAR TALLA</span>
+            <span style="color: var(--text-main); text-decoration: underline; cursor: pointer;">GUÍA DE MEDIDAS 📏</span>
+          </div>
+
+          <!-- PILLS MONOCROMÁTICOS -->
+          <div class="size-pills-row">
+            <div class="size-pill">S</div>
+            <div class="size-pill">M</div>
+            <div class="size-pill active">L</div>
+            <div class="size-pill">XL</div>
+            <div class="size-pill disabled">2XL</div>
+          </div>
+
+          <button class="add-to-cart-btn">
+            AGREGAR A LA BOLSA • $649 MXN
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPECS PANEL -->
+    <section class="specs-panel">
+      <div class="specs-header" id="specsTitle">
+        ESPECIFICACIONES DE LA DIRECCIÓN MONOCROMÁTICA
+      </div>
+      <p id="specsDescription" style="color: var(--text-muted); font-size: 14px; line-height: 1.6; max-width: 800px;">
+        <!-- Se llena con JS -->
+      </p>
+
+      <div class="swatches-bar" id="swatchesContainer">
+        <!-- Renderizado dinámicamente -->
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const themesData = {
+      'theme-pure-blackout': {
+        title: '1. PURE BLACKOUT (Negro Absoluto & Blanco Brutalista)',
+        description: 'La máxima expresión del streetwear deportivo contemporáneo (estilo Represent 247 y Gymshark Onyx). 0% color. Fondo negro absoluto (#000000) y acento primario en Blanco Puro (#FFFFFF) con tipografía negra. El contraste es brutal (21:1), sobrio y agresivo.',
+        swatches: [
+          { name: 'Canvas Base (OLED)', hex: '#000000', color: '#000000' },
+          { name: 'Surface (Tarjetas)', hex: '#0E0E0E', color: '#0E0E0E' },
+          { name: 'Surface Elevada', hex: '#171717', color: '#171717' },
+          { name: 'Bordes Neutros', hex: '#222222', color: '#222222' },
+          { name: 'Texto Atenuado', hex: '#8E8E8E', color: '#8E8E8E' },
+          { name: 'Acento Primario (Blanco)', hex: '#FFFFFF', color: '#FFFFFF' }
+        ]
+      },
+      'theme-platinum-reflective': {
+        title: '2. PLATINUM REFLECTIVE (Plata Líquida & Titanio 3M)',
+        description: 'Inspirada en el acabado del metal de las pesas y en los materiales reflectantes 3M usados en el atletismo de alto rendimiento. El botón de compra y los acentos son Plata Titanio (#E2E8F0) sobre un fondo carbón espacial (#09090B), dando una estética técnica y futurista sin usar colores chillantes.',
+        swatches: [
+          { name: 'Canvas Carbón', hex: '#09090B', color: '#09090B' },
+          { name: 'Surface Titanio', hex: '#141417', color: '#141417' },
+          { name: 'Elevated / Inputs', hex: '#1E1E23', color: '#1E1E23' },
+          { name: 'Bordes Acero', hex: '#27272D', color: '#27272D' },
+          { name: 'Texto Muted', hex: '#94949E', color: '#94949E' },
+          { name: 'Acento Primario (Plata)', hex: '#E2E8F0', color: '#E2E8F0' }
+        ]
+      },
+      'theme-bone-chalk': {
+        title: '3. BONE & CHALK (Tiza / Off-White de Alta Costura)',
+        description: 'El minimalismo de marcas de moda urbana de lujo como Fear of God Athletics o Cole Buxton. En lugar de un blanco clínico, utiliza un tono "tiza de levantamiento / off-white" (#F0EDE6) sobre negro cálido (#0A0A0A). Es sumamente estético, maduro y comunica calidad de tejido prémium.',
+        swatches: [
+          { name: 'Canvas Warm Black', hex: '#0A0A0A', color: '#0A0A0A' },
+          { name: 'Surface Tiza Oscura', hex: '#121212', color: '#121212' },
+          { name: 'Elevated / Inputs', hex: '#1C1C1C', color: '#1C1C1C' },
+          { name: 'Bordes Tiza', hex: '#242423', color: '#242423' },
+          { name: 'Texto Muted', hex: '#8F8F89', color: '#8F8F89' },
+          { name: 'Acento Primario (Off-White)', hex: '#F0EDE6', color: '#F0EDE6' }
+        ]
+      }
+    };
+
+    function setTheme(themeClass, buttonEl) {
+      const root = document.getElementById('appRoot');
+      root.className = themeClass;
+
+      document.querySelectorAll('.theme-tab-btn').forEach(btn => btn.classList.remove('active'));
+      buttonEl.classList.add('active');
+
+      const data = themesData[themeClass];
+      document.getElementById('specsTitle').innerHTML = `${data.title}`;
+      document.getElementById('specsDescription').innerText = data.description;
+
+      const container = document.getElementById('swatchesContainer');
+      container.innerHTML = data.swatches.map(s => `
+        <div class="swatch-card">
+          <div class="swatch-color-box" style="background-color: ${s.color};"></div>
+          <div class="swatch-name">${s.name}</div>
+          <div class="swatch-hex">${s.hex}</div>
+        </div>
+      `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTheme('theme-pure-blackout', document.querySelector('.theme-tab-btn.active'));
+    });
+  </script>
+</body>
+</html>
