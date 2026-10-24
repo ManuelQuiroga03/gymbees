@@ -6,7 +6,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/utils";
-import { ShieldCheck, Truck, Tag, Check, AlertCircle, ArrowLeft, ArrowRight, Lock } from "lucide-react";
+import { 
+  ShieldCheck, 
+  Truck, 
+  Tag, 
+  Check, 
+  AlertCircle, 
+  ArrowLeft, 
+  ArrowRight, 
+  Lock, 
+  CreditCard,
+  Building2,
+  Wallet
+} from "lucide-react";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -22,6 +34,15 @@ export default function CheckoutPage() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
 
+  // Errores de validación de campos
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string;
+    phone?: string;
+    postalCode?: string;
+    fullName?: string;
+    street?: string;
+  }>({});
+
   // Cupón de descuento
   const [couponCode, setCouponCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<{
@@ -35,6 +56,61 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+
+  // Manejador del teléfono (solo dígitos, máximo 10)
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numeric = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setPhone(numeric);
+    if (numeric.length === 10) {
+      setFieldErrors((prev) => ({ ...prev, phone: undefined }));
+    }
+  };
+
+  // Manejador del código postal (solo dígitos, máximo 5)
+  const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numeric = e.target.value.replace(/\D/g, "").slice(0, 5);
+    setPostalCode(numeric);
+    if (numeric.length === 5) {
+      setFieldErrors((prev) => ({ ...prev, postalCode: undefined }));
+    }
+  };
+
+  // Validaciones al salir del input (onBlur)
+  const validateEmail = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setFieldErrors((prev) => ({ ...prev, email: "El correo es obligatorio" }));
+      return false;
+    }
+    if (!emailRegex.test(email.trim())) {
+      setFieldErrors((prev) => ({ ...prev, email: "Ingresa un correo electrónico válido (ej. atleta@gymbees.mx)" }));
+      return false;
+    }
+    setFieldErrors((prev) => ({ ...prev, email: undefined }));
+    return true;
+  };
+
+  const validatePhone = () => {
+    if (!phone) {
+      setFieldErrors((prev) => ({ ...prev, phone: "El teléfono móvil es obligatorio" }));
+      return false;
+    }
+    if (phone.length !== 10) {
+      setFieldErrors((prev) => ({ ...prev, phone: "El número debe tener exactamente 10 dígitos (ej. 5512345678)" }));
+      return false;
+    }
+    setFieldErrors((prev) => ({ ...prev, phone: undefined }));
+    return true;
+  };
+
+  const validatePostalCode = () => {
+    if (!postalCode || postalCode.length !== 5) {
+      setFieldErrors((prev) => ({ ...prev, postalCode: "El código postal debe ser de 5 dígitos" }));
+      return false;
+    }
+    setFieldErrors((prev) => ({ ...prev, postalCode: undefined }));
+    return true;
+  };
 
   // Validar cupón
   const handleApplyCoupon = async (e: React.FormEvent) => {
@@ -80,13 +156,29 @@ export default function CheckoutPage() {
   const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setOrderError(null);
+
+    // Validar todos los campos críticos
+    const isEmailOk = validateEmail();
+    const isPhoneOk = validatePhone();
+    const isZipOk = validatePostalCode();
+
+    if (!isEmailOk || !isPhoneOk || !isZipOk) {
+      setOrderError("Por favor corrige los datos marcados en rojo antes de continuar.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const orderPayload = {
-        items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
-        customer: { email, fullName, phone },
-        shippingAddress: { street, colony, postalCode, city, state },
+        items: items.map((i) => ({ 
+          variantId: i.variantId, 
+          quantity: i.quantity,
+          name: i.name,
+          price: i.price,
+        })),
+        customer: { email: email.trim(), fullName: fullName.trim(), phone: phone.trim() },
+        shippingAddress: { street: street.trim(), colony: colony.trim(), postalCode: postalCode.trim(), city: city.trim(), state: state.trim() },
         discountCode: appliedDiscount?.code || null,
       };
 
@@ -99,17 +191,16 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Error al procesar el pedido");
+        throw new Error(data.error || "Error al procesar el pedido con Mercado Pago");
       }
 
-      // Limpiar carrito
-      clearCart();
-
-      // Si Mercado Pago generó la URL de Checkout Pro, redirigir al portal de pago
+      // Si Mercado Pago generó el link de pago oficial, redirigir
       if (data.paymentUrl) {
+        clearCart();
         window.location.href = data.paymentUrl;
       } else {
-        // Redirigir al ticket de éxito
+        // Redirigir al ticket de orden
+        clearCart();
         router.push(`/orden/${data.orderNumber}`);
       }
     } catch (err: any) {
@@ -144,14 +235,14 @@ export default function CheckoutPage() {
           <ArrowLeft className="w-4 h-4" />
           <span>Volver a la tienda</span>
         </Link>
-        <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
           <Lock className="w-3.5 h-3.5 text-primary" />
           <span>CHECKOUT SEGURO SSL DE 256 BITS</span>
         </div>
       </div>
 
       {orderError && (
-        <div className="mb-6 bg-rose-950/80 border border-rose-800 text-rose-200 text-xs p-4 rounded-xl flex items-center gap-3">
+        <div className="mb-6 bg-rose-950/80 border border-rose-800 text-rose-200 text-xs p-4 rounded-xl flex items-center gap-3 animate-in fade-in">
           <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
           <span>{orderError}</span>
         </div>
@@ -179,9 +270,23 @@ export default function CheckoutPage() {
                     required
                     placeholder="atleta@gymbees.mx"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (fieldErrors.email) validateEmail();
+                    }}
+                    onBlur={validateEmail}
+                    className={`w-full bg-background border rounded-xl py-3 px-4 text-xs text-foreground outline-none transition-colors ${
+                      fieldErrors.email
+                        ? "border-rose-500 focus:border-rose-400"
+                        : "border-border-subtle focus:border-primary"
+                    }`}
                   />
+                  {fieldErrors.email && (
+                    <p className="text-[10px] text-rose-400 mt-1 font-semibold flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{fieldErrors.email}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -191,7 +296,7 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Rodrigo Morales"
+                    placeholder="Manuel Hernández"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none"
@@ -200,17 +305,38 @@ export default function CheckoutPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Teléfono Móvil (WhatsApp de Guía) *
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Teléfono Móvil (WhatsApp de Guía) *
+                  </label>
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    {phone.length}/10 dígitos
+                  </span>
+                </div>
                 <input
                   type="tel"
                   required
-                  placeholder="55 8765 4321"
+                  placeholder="5523539962"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none"
+                  onChange={handlePhoneChange}
+                  onBlur={validatePhone}
+                  maxLength={10}
+                  className={`w-full bg-background border rounded-xl py-3 px-4 text-xs text-foreground outline-none font-mono transition-colors ${
+                    fieldErrors.phone
+                      ? "border-rose-500 focus:border-rose-400"
+                      : "border-border-subtle focus:border-primary"
+                  }`}
                 />
+                {fieldErrors.phone ? (
+                  <p className="text-[10px] text-rose-400 mt-1 font-semibold flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{fieldErrors.phone}</span>
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Solo 10 dígitos numéricos sin espacios ni guiones para notificación de guía de envío.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -227,7 +353,7 @@ export default function CheckoutPage() {
                 <input
                   type="text"
                   required
-                  placeholder="Av. Insurgentes Sur 1450, Depto 402"
+                  placeholder="Josefa Ortiz de Domínguez SN"
                   value={street}
                   onChange={(e) => setStreet(e.target.value)}
                   className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none"
@@ -242,7 +368,7 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Del Valle"
+                    placeholder="Cuautilulco"
                     value={colony}
                     onChange={(e) => setColony(e.target.value)}
                     className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none"
@@ -250,18 +376,34 @@ export default function CheckoutPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Código Postal (5 dígitos) *
-                  </label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Código Postal (5 dígitos) *
+                    </label>
+                    <span className="text-[10px] font-mono text-muted-foreground">
+                      {postalCode.length}/5
+                    </span>
+                  </div>
                   <input
                     type="text"
                     required
                     maxLength={5}
-                    placeholder="03100"
+                    placeholder="73310"
                     value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                    className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none font-mono"
+                    onChange={handlePostalCodeChange}
+                    onBlur={validatePostalCode}
+                    className={`w-full bg-background border rounded-xl py-3 px-4 text-xs text-foreground outline-none font-mono transition-colors ${
+                      fieldErrors.postalCode
+                        ? "border-rose-500 focus:border-rose-400"
+                        : "border-border-subtle focus:border-primary"
+                    }`}
                   />
+                  {fieldErrors.postalCode && (
+                    <p className="text-[10px] text-rose-400 mt-1 font-semibold flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{fieldErrors.postalCode}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -273,7 +415,7 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Benito Juárez"
+                    placeholder="Zacatlán"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none"
@@ -287,7 +429,7 @@ export default function CheckoutPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Ciudad de México"
+                    placeholder="Puebla"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none"
@@ -296,21 +438,56 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Paso 3: Método de Pago */}
-            <div className="bg-surface border border-border-subtle rounded-2xl p-6 space-y-3">
-              <h2 className="font-display text-2xl uppercase tracking-wider text-foreground">
-                3. MÉTODO DE PAGO
-              </h2>
-              <div className="p-4 bg-background border border-primary/40 rounded-xl flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-xs text-foreground block">
-                    PAGO DIRECTO EN LÍNEA / KUESKI PAY
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    Modo seguro listo para asociar con Stripe o Mercado Pago
-                  </span>
+            {/* Paso 3: Método de Pago Explicado */}
+            <div className="bg-surface border border-border-subtle rounded-2xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-2xl uppercase tracking-wider text-foreground">
+                  3. MÉTODO DE PAGO
+                </h2>
+                <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded">
+                  CHECKOUT PRO ACTIVO
+                </span>
+              </div>
+
+              {/* Opción Seleccionada: Mercado Pago */}
+              <div className="p-5 bg-background border-2 border-primary rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="font-display text-lg tracking-wide uppercase text-foreground block">
+                        MERCADO PAGO (MÉXICO)
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Pasarela oficial con respaldo y protección al comprador
+                      </span>
+                    </div>
+                  </div>
+                  <ShieldCheck className="w-6 h-6 text-primary" />
                 </div>
-                <ShieldCheck className="w-5 h-5 text-primary" />
+
+                <div className="border-t border-border-subtle pt-3 text-xs text-muted-foreground space-y-2">
+                  <p>
+                    Al presionar <strong>PAGAR CON MERCADO PAGO</strong>, se abrirá la pasarela segura oficial donde podrás elegir tu forma de pago preferida:
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px] font-semibold text-foreground">
+                    <div className="flex items-center gap-1.5 p-2 bg-surface rounded-lg border border-border-subtle">
+                      <CreditCard className="w-3.5 h-3.5 text-primary" />
+                      <span>Tarjetas Débito / Crédito</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-2 bg-surface rounded-lg border border-border-subtle">
+                      <Wallet className="w-3.5 h-3.5 text-primary" />
+                      <span>Saldo Mercado Pago</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-2 bg-surface rounded-lg border border-border-subtle">
+                      <Building2 className="w-3.5 h-3.5 text-primary" />
+                      <span>Efectivo en OXXO / SPEI</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </form>
@@ -333,40 +510,39 @@ export default function CheckoutPage() {
                       Talla {item.size} • Cant: {item.quantity}
                     </span>
                   </div>
-                  <span className="font-black text-foreground">
+                  <span className="font-mono font-bold text-foreground">
                     {formatPrice(item.price * item.quantity)}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* Formulario de Cupón de Descuento */}
+            {/* Input Cupón */}
             <div className="pt-4 border-t border-border-subtle">
-              <form onSubmit={handleApplyCoupon} className="space-y-2">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  ¿Tienes un código de descuento o de atleta?
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Ej. DROP10"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    className="flex-1 bg-background border border-border-subtle focus:border-primary rounded-xl py-2.5 px-3.5 text-xs font-mono font-bold uppercase text-foreground outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={validatingCoupon}
-                    className="bg-surface-elevated hover:bg-border-subtle border border-border-subtle text-foreground text-xs font-bold uppercase px-4 py-2.5 rounded-xl transition-colors shrink-0"
-                  >
-                    {validatingCoupon ? "..." : "Aplicar"}
-                  </button>
-                </div>
-              </form>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                ¿Tienes un código de descuento o de atleta?
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="EJ. DROP10"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  className="flex-1 bg-background border border-border-subtle focus:border-primary rounded-xl px-3 py-2 text-xs font-mono text-foreground uppercase outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  disabled={validatingCoupon || !couponCode.trim()}
+                  className="bg-surface hover:bg-surface-elevated border border-border-subtle text-foreground text-xs font-bold uppercase px-4 py-2 rounded-xl transition-colors disabled:opacity-40"
+                >
+                  {validatingCoupon ? "..." : "Aplicar"}
+                </button>
+              </div>
 
               {couponError && (
-                <p className="text-[11px] text-rose-400 mt-2 flex items-center gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <p className="text-[11px] text-rose-400 mt-1.5 font-semibold flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
                   <span>{couponError}</span>
                 </p>
               )}

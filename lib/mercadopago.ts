@@ -72,7 +72,7 @@ export async function createMercadoPagoPreference(params: CreatePreferenceParams
         email: params.customer.email,
         phone: {
           area_code: '52',
-          number: params.customer.phone.replace(/\D/g, ''),
+          number: params.customer.phone.replace(/\D/g, '').slice(0, 10),
         },
         address: {
           street_name: params.shippingAddress.street,

@@ -169,8 +169,13 @@ export async function POST(req: Request) {
           shippingCost,
           discountAmount,
         });
-      } catch (mpError) {
+      } catch (mpError: any) {
         console.error('Error al generar preferencia en Mercado Pago:', mpError);
+        await client.query('ROLLBACK');
+        return NextResponse.json(
+          { error: `Mercado Pago Error: ${mpError?.message || 'No se pudo inicializar la pasarela de pago'}` },
+          { status: 502 }
+        );
       }
 
       // 5. Guardar Orden en BD (con status pendiente de pago)
