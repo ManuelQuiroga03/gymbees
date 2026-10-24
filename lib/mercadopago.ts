@@ -64,21 +64,30 @@ export async function createMercadoPagoPreference(params: CreatePreferenceParams
   const firstName = nameParts[0] || 'Cliente';
   const lastName = nameParts.slice(1).join(' ') || 'Gymbees';
 
+  // Si no es email de prueba en desarrollo, evitamos enviarlo para que Mercado Pago
+  // no vincule la transacción a un usuario real (lo que causa "Una de las partes es de prueba")
+  const isTestEmail = params.customer.email.includes('testuser') || params.customer.email.includes('@test');
+
+  const payerPayload: any = {
+    name: firstName,
+    surname: lastName,
+    phone: {
+      area_code: '52',
+      number: params.customer.phone.replace(/\D/g, '').slice(0, 10),
+    },
+    address: {
+      street_name: params.shippingAddress.street,
+      zip_code: params.shippingAddress.postalCode,
+    },
+  };
+
+  if (isTestEmail || process.env.NODE_ENV === 'production') {
+    payerPayload.email = params.customer.email;
+  }
+
   const bodyPayload: any = {
     items: preferenceItems,
-    payer: {
-      name: firstName,
-      surname: lastName,
-      email: params.customer.email,
-      phone: {
-        area_code: '52',
-        number: params.customer.phone.replace(/\D/g, '').slice(0, 10),
-      },
-      address: {
-        street_name: params.shippingAddress.street,
-        zip_code: params.shippingAddress.postalCode,
-      },
-    },
+    payer: payerPayload,
     back_urls: {
       success: `${appUrl}/orden/${params.orderNumber}?status=approved`,
       failure: `${appUrl}/checkout?status=failed&order=${params.orderNumber}`,
