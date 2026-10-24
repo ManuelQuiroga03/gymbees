@@ -219,7 +219,7 @@ export async function POST(req: Request) {
 
       await client.query('COMMIT');
 
-      const paymentUrl = mpPreference?.sandboxInitPoint || mpPreference?.initPoint || null;
+      const paymentUrl = mpPreference?.initPoint || mpPreference?.sandboxInitPoint || null;
 
       return NextResponse.json({
         success: true,
@@ -258,7 +258,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: true,
         orderNumber,
-        paymentUrl: mpPreference?.sandboxInitPoint || mpPreference?.initPoint,
+        paymentUrl: mpPreference?.initPoint || mpPreference?.sandboxInitPoint,
         total: finalTotal,
         subtotal: calculatedSubtotal,
         shippingCost,
