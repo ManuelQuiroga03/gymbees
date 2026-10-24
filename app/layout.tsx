@@ -8,7 +8,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 
 export const metadata: Metadata = {
-  title: "GYMBEES | Heavyweight Athletic & Gym Streetwear",
+  title: "GYMBEES",
   description: "Ropa de entrenamiento de alto rendimiento, pump covers de 240+ GSM y prendas de compresión para levantadores pesados en México.",
 };
 

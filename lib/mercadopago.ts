@@ -36,6 +36,7 @@ export interface CreatePreferenceParams {
 export async function createMercadoPagoPreference(params: CreatePreferenceParams) {
   const preference = new Preference(mpClient);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const isHttps = appUrl.startsWith('https://');
 
   // Si hay costo de envío, lo añadimos como concepto
   const preferenceItems = params.items.map((item, index) => ({
@@ -63,36 +64,42 @@ export async function createMercadoPagoPreference(params: CreatePreferenceParams
   const firstName = nameParts[0] || 'Cliente';
   const lastName = nameParts.slice(1).join(' ') || 'Gymbees';
 
-  const response = await preference.create({
-    body: {
-      items: preferenceItems,
-      payer: {
-        name: firstName,
-        surname: lastName,
-        email: params.customer.email,
-        phone: {
-          area_code: '52',
-          number: params.customer.phone.replace(/\D/g, '').slice(0, 10),
-        },
-        address: {
-          street_name: params.shippingAddress.street,
-          zip_code: params.shippingAddress.postalCode,
-        },
+  const bodyPayload: any = {
+    items: preferenceItems,
+    payer: {
+      name: firstName,
+      surname: lastName,
+      email: params.customer.email,
+      phone: {
+        area_code: '52',
+        number: params.customer.phone.replace(/\D/g, '').slice(0, 10),
       },
-      back_urls: {
-        success: `${appUrl}/orden/${params.orderNumber}?status=approved`,
-        failure: `${appUrl}/checkout?status=failed&order=${params.orderNumber}`,
-        pending: `${appUrl}/orden/${params.orderNumber}?status=pending`,
-      },
-      auto_return: 'approved',
-      external_reference: params.orderNumber,
-      statement_descriptor: 'GYMBEES MEX',
-      notification_url: `${appUrl}/api/webhooks/mercadopago`,
-      payment_methods: {
-        excluded_payment_types: [],
-        installments: 12, // Permite hasta 12 cuotas
+      address: {
+        street_name: params.shippingAddress.street,
+        zip_code: params.shippingAddress.postalCode,
       },
     },
+    back_urls: {
+      success: `${appUrl}/orden/${params.orderNumber}?status=approved`,
+      failure: `${appUrl}/checkout?status=failed&order=${params.orderNumber}`,
+      pending: `${appUrl}/orden/${params.orderNumber}?status=pending`,
+    },
+    external_reference: params.orderNumber,
+    statement_descriptor: 'GYMBEES MEX',
+    payment_methods: {
+      excluded_payment_types: [],
+      installments: 12,
+    },
+  };
+
+  // Mercado Pago solo admite auto_return y notification_url si es un dominio público HTTPS
+  if (isHttps) {
+    bodyPayload.auto_return = 'approved';
+    bodyPayload.notification_url = `${appUrl}/api/webhooks/mercadopago`;
+  }
+
+  const response = await preference.create({
+    body: bodyPayload,
   });
 
   return {
