@@ -61,11 +61,11 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
         </div>
       </nav>
 
-      {/* 2. Área Principal de la Ficha de Producto (PDP) */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
-          {/* Galería Visual (Columna Izquierda: 7 columnas en desktop) */}
-          <div className="lg:col-span-7 sticky top-24">
+      {/* 2. Área Principal de la Ficha de Producto (PDP) Compacta */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+          {/* Galería Visual (Columna Izquierda: 6 columnas) */}
+          <div className="lg:col-span-6 sticky top-20">
             <ProductGallery
               images={product.images}
               productName={product.name}
@@ -73,8 +73,8 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
             />
           </div>
 
-          {/* Detalles Transaccionales (Columna Derecha: 5 columnas en desktop) */}
-          <div className="lg:col-span-5">
+          {/* Detalles Transaccionales (Columna Derecha: 6 columnas) */}
+          <div className="lg:col-span-6">
             <ProductDetails
               product={product}
               onButtonRef={(el) => {

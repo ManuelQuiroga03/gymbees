@@ -18,24 +18,11 @@ export function ProductGallery({ images, productName, materialGsm }: ProductGall
   const currentImage = safeImages[activeImageIndex] || null;
 
   return (
-    <div className="space-y-4">
-      {/* Contenedor Principal de Imagen */}
-      <div className="relative aspect-[4/5] bg-surface-elevated rounded-2xl border border-border-subtle overflow-hidden group shadow-lg">
-        {/* Badges Superiores */}
-        <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 items-start">
-          <span className="bg-background/85 border border-border-subtle text-foreground text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg tracking-wider backdrop-blur-md shadow-sm">
-            DROP OFICIAL
-          </span>
-          {materialGsm && (
-            <span className="bg-primary/90 text-primary-foreground text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-md tracking-wider shadow-sm flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              {materialGsm}
-            </span>
-          )}
-        </div>
-
+    <div className="space-y-3">
+      {/* Contenedor Principal de Imagen con Escala Compacta */}
+      <div className="relative aspect-[4/5] max-w-[490px] mx-auto bg-surface-elevated rounded-2xl border border-border-subtle overflow-hidden group shadow-lg">
         {/* Garantía de Calidad en Badge */}
-        <div className="absolute bottom-4 right-4 z-10 hidden sm:flex items-center gap-1.5 bg-black/75 border border-border-subtle text-muted-foreground text-[10px] font-bold uppercase px-2.5 py-1 rounded-md backdrop-blur-md">
+        <div className="absolute bottom-3 right-3 z-10 hidden sm:flex items-center gap-1.5 bg-black/75 border border-border-subtle text-muted-foreground text-[10px] font-bold uppercase px-2.5 py-1 rounded-md backdrop-blur-md">
           <ShieldCheck className="w-3.5 h-3.5 text-primary" />
           <span>SERIGRAFÍA DE ALTA DENSIDAD</span>
         </div>
@@ -65,12 +52,12 @@ export function ProductGallery({ images, productName, materialGsm }: ProductGall
 
       {/* Miniaturas de Galería */}
       {safeImages.length > 1 && (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex gap-2.5 overflow-x-auto pb-1 max-w-[490px] mx-auto scrollbar-none">
           {safeImages.map((img, idx) => (
             <button
               key={idx}
               onClick={() => setActiveImageIndex(idx)}
-              className={`relative w-20 h-24 rounded-xl border-2 overflow-hidden shrink-0 transition-all ${
+              className={`relative w-16 h-20 rounded-xl border-2 overflow-hidden shrink-0 transition-all ${
                 activeImageIndex === idx
                   ? "border-primary ring-2 ring-primary/20 scale-102"
                   : "border-border-subtle hover:border-border-strong opacity-70 hover:opacity-100"
