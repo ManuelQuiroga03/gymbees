@@ -16,25 +16,14 @@ const DEFAULT_CATEGORIES: Array<{
   description: string;
   href: string;
   imageUrl: string;
-  className: string;
 }> = [
-  {
-    slug: "bottoms",
-    title: "BAGGYS & BOTTOMS",
-    tag: "GOLDEN ERA MOBILITY",
-    description: "Pants de máxima movilidad para días de pierna y sentadillas pesadas.",
-    href: "/categoria/bottoms",
-    imageUrl: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=800",
-    className: "md:col-span-1 md:row-span-2 min-h-[440px] md:min-h-[500px]",
-  },
   {
     slug: "pump-covers",
     title: "PUMP COVERS (OVERSIZED)",
     tag: "240+ GSM HEAVYWEIGHT",
-    description: "Corte amplio con hombros caídos para cubrir y revelar el físico.",
+    description: "Corte amplio con hombros caídos para cubrir y revelar el físico con caída impecable.",
     href: "/categoria/pump-covers",
     imageUrl: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=1200",
-    className: "md:col-span-1 min-h-[240px]",
   },
   {
     slug: "compresion",
@@ -43,7 +32,14 @@ const DEFAULT_CATEGORIES: Array<{
     description: "Elasticidad técnica para soporte muscular durante series pesadas.",
     href: "/categoria/compresion",
     imageUrl: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&q=80&w=800",
-    className: "md:col-span-1 min-h-[240px]",
+  },
+  {
+    slug: "bottoms",
+    title: "BAGGYS & BOTTOMS",
+    tag: "GOLDEN ERA MOBILITY",
+    description: "Pants de máxima movilidad para días de pierna y sentadillas pesadas.",
+    href: "/categoria/bottoms",
+    imageUrl: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=800",
   },
   {
     slug: "accesorios",
@@ -52,7 +48,6 @@ const DEFAULT_CATEGORIES: Array<{
     description: "Straps de levantamiento, muñequeras reforzadas y calcetas tubulares.",
     href: "/categoria/accesorios",
     imageUrl: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800",
-    className: "md:col-span-2 min-h-[240px]",
   },
 ];
 
@@ -86,44 +81,42 @@ export function BentoCategories({ categories }: BentoCategoriesProps) {
         </p>
       </div>
 
-      {/* Grid Asimétrico: Columna Izquierda Alta (Baggys) + Lado Derecho Dinámico */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* Showcase Editorial de 4 Columnas Uniformes (Estilo YoungLA / Represent) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
         {items.map((cat) => (
           <Link
             key={cat.slug}
             href={cat.href}
-            className={`group relative rounded-2xl border border-border-subtle hover:border-border-strong overflow-hidden flex flex-col justify-between p-6 sm:p-8 transition-all duration-500 shadow-xl hover:shadow-2xl ${cat.className}`}
+            className="group relative rounded-2xl border border-border-subtle hover:border-border-strong overflow-hidden flex flex-col justify-between p-6 sm:p-7 transition-all duration-500 shadow-xl hover:shadow-2xl aspect-[3/4] min-h-[400px] sm:min-h-[440px]"
           >
-            {/* Imagen de Fondo con Micro-Zoom Cinemático y Enfoque en la Parte Alta (Pecho/Hombros) */}
+            {/* Imagen de Fondo con Micro-Zoom Cinemático */}
             {cat.imageUrl && (
               <img
                 src={cat.imageUrl}
                 alt={cat.title}
-                className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 ${
-                  cat.slug === "bottoms" ? "object-top" : "object-[center_20%]"
-                }`}
+                className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
               />
             )}
 
             {/* Capa de Gradiente Oscuro para Legibilidad Superior */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/25 group-hover:via-black/50 transition-colors duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/15 group-hover:via-black/40 transition-colors duration-500" />
 
             {/* Parte Superior: Tag Badge + Flecha de Acción */}
             <div className="relative z-10 flex justify-between items-start">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-primary bg-black/75 border border-white/10 px-2.5 py-1 rounded-md backdrop-blur-md shadow-md uppercase">
+              <span className="text-[10px] font-mono font-bold tracking-widest text-primary bg-black/80 border border-white/10 px-2.5 py-1 rounded-md backdrop-blur-md shadow-md uppercase">
                 {cat.tag}
               </span>
-              <div className="w-9 h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:border-primary/50 group-hover:bg-black/90 transition-all backdrop-blur-md shadow-md">
-                <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <div className="w-8 h-8 rounded-full bg-black/70 border border-white/10 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:border-primary/50 group-hover:bg-black/90 transition-all backdrop-blur-md shadow-md">
+                <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </div>
             </div>
 
             {/* Parte Inferior: Título y Descripción */}
             <div className="relative z-10 mt-auto pt-8">
-              <h3 className="font-display text-2xl sm:text-3xl tracking-wide text-white uppercase group-hover:text-primary transition-colors duration-300 drop-shadow-sm">
+              <h3 className="font-display text-2xl tracking-wide text-white uppercase group-hover:text-primary transition-colors duration-300 drop-shadow-sm">
                 {cat.title}
               </h3>
-              <p className="text-xs text-neutral-300/90 mt-1.5 max-w-md leading-relaxed line-clamp-2">
+              <p className="text-xs text-neutral-300/90 mt-1 leading-relaxed line-clamp-2">
                 {cat.description}
               </p>
             </div>
