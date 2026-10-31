@@ -41,7 +41,7 @@ export async function PATCH(req: Request) {
       console.warn('Nota sobre columnas en categories:', colErr);
     }
 
-    // Ejecutar actualización
+    // Ejecutar actualización segura convirtiendo UUID a texto para evitar "operator does not exist: text = uuid"
     const updated = await query(
       `
       UPDATE public.categories
@@ -50,10 +50,10 @@ export async function PATCH(req: Request) {
         tag = COALESCE($2, tag),
         description = COALESCE($3, description),
         name = COALESCE($4, name)
-      WHERE id = $5 OR slug = $5
+      WHERE (id::text = $5 OR slug = $6)
       RETURNING id, name, slug, description, sort_order, image_url, tag;
       `,
-      [imageUrl || null, tag || null, description || null, name || null, identifier]
+      [imageUrl || null, tag || null, description || null, name || null, id || identifier, slug || identifier]
     );
 
     if (updated && updated.length > 0) {
