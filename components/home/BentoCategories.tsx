@@ -25,16 +25,16 @@ const DEFAULT_CATEGORIES: Array<{
     description: "Pants de máxima movilidad para días de pierna y sentadillas pesadas.",
     href: "/categoria/bottoms",
     imageUrl: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=800",
-    className: "md:col-span-1 md:row-span-2 min-h-[420px] md:min-h-[490px]",
+    className: "md:col-span-1 md:row-span-2 min-h-[440px] md:min-h-[500px]",
   },
   {
     slug: "pump-covers",
     title: "PUMP COVERS (OVERSIZED)",
     tag: "240+ GSM HEAVYWEIGHT",
-    description: "Corte amplio con hombros caídos para cubrir y revelar el físico con caída impecable.",
+    description: "Corte amplio con hombros caídos para cubrir y revelar el físico.",
     href: "/categoria/pump-covers",
     imageUrl: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=1200",
-    className: "md:col-span-2 min-h-[230px]",
+    className: "md:col-span-1 min-h-[240px]",
   },
   {
     slug: "compresion",
@@ -43,7 +43,7 @@ const DEFAULT_CATEGORIES: Array<{
     description: "Elasticidad técnica para soporte muscular durante series pesadas.",
     href: "/categoria/compresion",
     imageUrl: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&q=80&w=800",
-    className: "md:col-span-1 min-h-[230px]",
+    className: "md:col-span-1 min-h-[240px]",
   },
   {
     slug: "accesorios",
@@ -52,7 +52,7 @@ const DEFAULT_CATEGORIES: Array<{
     description: "Straps de levantamiento, muñequeras reforzadas y calcetas tubulares.",
     href: "/categoria/accesorios",
     imageUrl: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800",
-    className: "md:col-span-1 min-h-[230px]",
+    className: "md:col-span-2 min-h-[240px]",
   },
 ];
 
@@ -94,12 +94,14 @@ export function BentoCategories({ categories }: BentoCategoriesProps) {
             href={cat.href}
             className={`group relative rounded-2xl border border-border-subtle hover:border-border-strong overflow-hidden flex flex-col justify-between p-6 sm:p-8 transition-all duration-500 shadow-xl hover:shadow-2xl ${cat.className}`}
           >
-            {/* Imagen de Fondo con Micro-Zoom Cinemático */}
+            {/* Imagen de Fondo con Micro-Zoom Cinemático y Enfoque en la Parte Alta (Pecho/Hombros) */}
             {cat.imageUrl && (
               <img
                 src={cat.imageUrl}
                 alt={cat.title}
-                className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+                className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 ${
+                  cat.slug === "bottoms" ? "object-top" : "object-[center_20%]"
+                }`}
               />
             )}
 
