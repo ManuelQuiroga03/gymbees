@@ -12,7 +12,9 @@ import {
 
 export default function AdminPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"products" | "discounts" | "orders">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "discounts" | "orders" | "categories">("products");
+  const [categories, setCategories] = useState<any[]>([]);
+  const [uploadingCategorySlug, setUploadingCategorySlug] = useState<string | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [discounts, setDiscounts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -78,10 +80,11 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [prodRes, discRes, ordRes] = await Promise.all([
+      const [prodRes, discRes, ordRes, catRes] = await Promise.all([
         fetch("/api/admin/products"),
         fetch("/api/admin/discounts"),
         fetch("/api/v1/orders"),
+        fetch("/api/admin/categories"),
       ]);
 
       if (prodRes.ok) {
@@ -96,10 +99,60 @@ export default function AdminPage() {
         const d = await ordRes.json();
         setOrders(d.orders || []);
       }
+      if (catRes.ok) {
+        const cats = await catRes.json();
+        setCategories(Array.isArray(cats) ? cats : []);
+      }
     } catch (err) {
       console.error("Error al cargar datos de admin:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Subir portada para una categoría del catálogo / Bento
+  const handleCategoryCoverUpload = async (catId: string, slug: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingCategorySlug(slug);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadData.error || "Error al subir imagen");
+
+      const imageUrl = uploadData.url;
+
+      const patchRes = await fetch("/api/admin/categories", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: catId,
+          slug,
+          imageUrl,
+        }),
+      });
+
+      const patchData = await patchRes.json();
+      if (!patchRes.ok) throw new Error(patchData.error || "Error al asociar imagen a la categoría");
+
+      setCategories((prev) =>
+        prev.map((c) => (c.slug === slug || c.id === catId ? { ...c, imageUrl } : c))
+      );
+
+      showToast(`¡Portada de ${slug.toUpperCase()} actualizada con éxito!`);
+    } catch (err: any) {
+      alert(err.message || "Error al actualizar portada de categoría");
+    } finally {
+      setUploadingCategorySlug(null);
+      e.target.value = "";
     }
   };
 
@@ -454,6 +507,18 @@ export default function AdminPage() {
             <ShoppingBag className="w-4 h-4" />
             <span>Órdenes &amp; Pedidos ({orders.length})</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab("categories")}
+            className={`pb-3 border-b-2 flex items-center gap-2 transition-colors ${
+              activeTab === "categories"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>Portadas de Categorías ({categories.length})</span>
+          </button>
         </div>
 
         {/* ========================================================================= */}
@@ -744,6 +809,136 @@ export default function AdminPage() {
       </div>
 
       {/* ========================================================================= */}
+        {/* ========================================================================= */}
+        {/* TAB 4: PORTADAS DE CATEGORÍAS & BENTO GRID */}
+        {/* ========================================================================= */}
+        {activeTab === "categories" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="font-display text-3xl uppercase tracking-wider text-foreground">
+                  Portadas de Categorías &amp; Bento Grid
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Personaliza la foto de campaña para cada silueta (Baggys, Pump Covers, Compresión, Accesorios). Se actualiza en tiempo real en la tienda.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={loadData}
+                  className="p-2.5 bg-surface border border-border-subtle rounded-xl text-muted-foreground hover:text-foreground transition-colors"
+                  title="Recargar datos"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {categories.length === 0 ? (
+              <div className="bg-surface border border-border-subtle rounded-2xl p-12 text-center text-muted-foreground">
+                <Layers className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                <p className="font-display text-xl text-foreground uppercase">
+                  Cargando categorías...
+                </p>
+                <p className="text-xs mt-1">
+                  Si no aparecen, haz clic en el botón de recargar.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {categories.map((cat) => {
+                  const isUploading = uploadingCategorySlug === cat.slug;
+                  return (
+                    <div
+                      key={cat.slug}
+                      className="bg-surface border border-border-subtle rounded-2xl p-5 flex flex-col justify-between hover:border-border-strong transition-all shadow-lg group"
+                    >
+                      <div>
+                        {/* Preview de la Portada Actual */}
+                        <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden bg-surface-elevated border border-border-subtle mb-4 group-hover:border-primary/50 transition-colors">
+                          {cat.imageUrl ? (
+                            <img
+                              src={cat.imageUrl}
+                              alt={cat.name}
+                              className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-muted-foreground">
+                              <ImageIcon className="w-10 h-10 mb-2 opacity-30" />
+                              <span className="text-xs font-mono">Sin Portada</span>
+                            </div>
+                          )}
+
+                          {/* Badge de Tag */}
+                          {cat.tag && (
+                            <div className="absolute top-2.5 left-2.5 z-10">
+                              <span className="text-[9px] font-mono font-bold tracking-wider text-primary bg-black/80 border border-white/10 px-2 py-0.5 rounded backdrop-blur-md uppercase">
+                                {cat.tag}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Link flotante para ver en tienda */}
+                          <Link
+                            href={`/categoria/${cat.slug}`}
+                            target="_blank"
+                            className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-black/75 border border-white/10 flex items-center justify-center text-white hover:text-primary transition-colors backdrop-blur-md"
+                            title="Ver en vivo"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+
+                        {/* Textos descriptivos */}
+                        <div className="space-y-1 mb-4">
+                          <h3 className="font-display text-xl uppercase tracking-wide text-foreground">
+                            {cat.name}
+                          </h3>
+                          <p className="text-[11px] font-mono text-primary font-bold">
+                            /categoria/{cat.slug}
+                          </p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 pt-1 leading-relaxed">
+                            {cat.description || "Sin descripción"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Botón de Subida Directa */}
+                      <div className="pt-2">
+                        <label className={`w-full py-2.5 px-4 rounded-xl font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
+                          isUploading
+                            ? "bg-surface-elevated text-muted-foreground border border-border-subtle cursor-wait"
+                            : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-primary/20 active:scale-98"
+                        }`}>
+                          {isUploading ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                              <span>Subiendo foto...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4" />
+                              <span>{cat.imageUrl ? "Cambiar Portada" : "Subir Portada"}</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/jpg"
+                            disabled={isUploading}
+                            className="hidden"
+                            onChange={(e) => handleCategoryCoverUpload(cat.id, cat.slug, e)}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
       {/* MODAL: NUEVO PRODUCTO / DROP */}
       {/* ========================================================================= */}
       {showNewProductModal && (

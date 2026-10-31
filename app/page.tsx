@@ -1,4 +1,4 @@
-import { getFeaturedProducts } from "@/lib/products";
+import { getFeaturedProducts, getAllCategories } from "@/lib/products";
 import { Hero } from "@/components/home/Hero";
 import { BentoCategories } from "@/components/home/BentoCategories";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -7,15 +7,18 @@ import { Sparkles, ShieldCheck, Zap } from "lucide-react";
 export const revalidate = 0; // Datos frescos en cada petición
 
 export default async function HomePage() {
-  const products = await getFeaturedProducts();
+  const [products, categories] = await Promise.all([
+    getFeaturedProducts(),
+    getAllCategories(),
+  ]);
 
   return (
     <div className="space-y-0">
       {/* 1. Hero Section */}
       <Hero />
 
-      {/* 2. Bento Grid de Categorías */}
-      <BentoCategories />
+      {/* 2. Bento Grid de Categorías Asimétrico */}
+      <BentoCategories categories={categories} />
 
       {/* 3. Drop Activo con Quick-Add */}
       <section id="drop" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-border-subtle">

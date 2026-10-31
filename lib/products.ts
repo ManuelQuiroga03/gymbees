@@ -21,6 +21,8 @@ const FALLBACK_CATEGORIES: Category[] = [
     name: 'Pump Covers (Oversized)',
     slug: 'pump-covers',
     description: 'Playeras pesadas de 240+ GSM con corte de hombro caído y serigrafía de alto impacto.',
+    tag: '240+ GSM HEAVYWEIGHT',
+    imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=1200',
     sortOrder: 1,
   },
   {
@@ -28,20 +30,26 @@ const FALLBACK_CATEGORIES: Category[] = [
     name: 'Compression Wear',
     slug: 'compresion',
     description: 'Playeras de compresión de alta elasticidad para soporte muscular y máxima definición.',
+    tag: '4-WAY STRETCH',
+    imageUrl: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&q=80&w=800',
     sortOrder: 2,
   },
   {
     id: 'c3333333-3333-3333-3333-333333333333',
-    name: 'Bottoms & Baggys',
+    name: 'Baggys & Bottoms',
     slug: 'bottoms',
     description: 'Pants holgados, shorts de entrenamiento y joggers estilo Golden Era con movilidad total.',
+    tag: 'GOLDEN ERA MOBILITY',
+    imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=800',
     sortOrder: 3,
   },
   {
     id: 'c4444444-4444-4444-4444-444444444444',
-    name: 'Accesorios de Levantamiento',
+    name: 'Accesorios de Fuerza',
     slug: 'accesorios',
     description: 'Straps de levantamiento, muñequeras reforzadas y calcetas tubulares Heavy Club.',
+    tag: 'HEAVY CLUB ESSENTIALS',
+    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800',
     sortOrder: 4,
   },
 ];
@@ -416,23 +424,38 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
 export async function getAllCategories(): Promise<Category[]> {
   try {
+    // Intentar leer con columnas extendidas (image_url, tag)
     const rows = await query(`
-      SELECT id, name, slug, description, sort_order
+      SELECT id, name, slug, description, sort_order,
+             COALESCE(image_url, NULL) as image_url,
+             COALESCE(tag, NULL) as tag
       FROM categories
       ORDER BY sort_order ASC
-    `);
+    `).catch(async () => {
+      // Fallback si las columnas no han sido migradas en PostgreSQL
+      return await query(`
+        SELECT id, name, slug, description, sort_order
+        FROM categories
+        ORDER BY sort_order ASC
+      `);
+    });
 
     if (!rows || rows.length === 0) {
       return FALLBACK_CATEGORIES;
     }
 
-    return rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      slug: r.slug,
-      description: r.description,
-      sortOrder: r.sort_order,
-    }));
+    return rows.map((r) => {
+      const fallbackMatch = FALLBACK_CATEGORIES.find((c) => c.slug === r.slug);
+      return {
+        id: r.id,
+        name: r.name,
+        slug: r.slug,
+        description: r.description || fallbackMatch?.description,
+        sortOrder: r.sort_order,
+        imageUrl: r.image_url || fallbackMatch?.imageUrl,
+        tag: r.tag || fallbackMatch?.tag,
+      };
+    });
   } catch (err) {
     console.warn('DB error in getAllCategories, using fallback:', (err as any)?.message || err);
     return FALLBACK_CATEGORIES;
@@ -440,19 +463,32 @@ export async function getAllCategories(): Promise<Category[]> {
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
+  const fallbackMatch = FALLBACK_CATEGORIES.find((c) => c.slug === slug) || null;
   try {
     const rows = await query(
       `
-      SELECT id, name, slug, description, sort_order
+      SELECT id, name, slug, description, sort_order,
+             COALESCE(image_url, NULL) as image_url,
+             COALESCE(tag, NULL) as tag
       FROM categories
       WHERE slug = $1
       LIMIT 1
       `,
       [slug]
-    );
+    ).catch(async () => {
+      return await query(
+        `
+        SELECT id, name, slug, description, sort_order
+        FROM categories
+        WHERE slug = $1
+        LIMIT 1
+        `,
+        [slug]
+      );
+    });
 
     if (!rows || rows.length === 0) {
-      return FALLBACK_CATEGORIES.find((c) => c.slug === slug) || null;
+      return fallbackMatch;
     }
 
     const r = rows[0];
@@ -460,12 +496,14 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
       id: r.id,
       name: r.name,
       slug: r.slug,
-      description: r.description,
+      description: r.description || fallbackMatch?.description,
       sortOrder: r.sort_order,
+      imageUrl: r.image_url || fallbackMatch?.imageUrl,
+      tag: r.tag || fallbackMatch?.tag,
     };
   } catch (err) {
     console.warn('DB error in getCategoryBySlug, using fallback:', (err as any)?.message || err);
-    return FALLBACK_CATEGORIES.find((c) => c.slug === slug) || null;
+    return fallbackMatch;
   }
 }
 

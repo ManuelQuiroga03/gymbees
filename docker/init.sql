@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS public.categories (
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     description TEXT,
+    tag TEXT,
+    image_url TEXT,
     sort_order INT DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -151,11 +153,11 @@ $$ LANGUAGE plpgsql;
 -- ==============================================================================
 
 -- Categorías
-INSERT INTO public.categories (id, name, slug, description, sort_order) VALUES
-('c1111111-1111-1111-1111-111111111111', 'Pump Covers (Oversized)', 'pump-covers', 'Playeras pesadas de 240+ GSM con corte de hombro caído', 1),
-('c2222222-2222-2222-2222-222222222222', 'Compression Wear', 'compresion', 'Playeras de compresión de alta elasticidad muscular', 2),
-('c3333333-3333-3333-3333-333333333333', 'Bottoms & Baggys', 'bottoms', 'Pants holgados, shorts de entrenamiento y joggers', 3),
-('c4444444-4444-4444-4444-444444444444', 'Accesorios de Levantamiento', 'accesorios', 'Straps, muñequeras y calcetas tubulares', 4)
+INSERT INTO public.categories (id, name, slug, description, tag, image_url, sort_order) VALUES
+('c1111111-1111-1111-1111-111111111111', 'Pump Covers (Oversized)', 'pump-covers', 'Playeras pesadas de 240+ GSM con corte de hombro caído', '240+ GSM HEAVYWEIGHT', 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=1200', 1),
+('c2222222-2222-2222-2222-222222222222', 'Compression Wear', 'compresion', 'Playeras de compresión de alta elasticidad muscular', '4-WAY STRETCH', 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&q=80&w=800', 2),
+('c3333333-3333-3333-3333-333333333333', 'Bottoms & Baggys', 'bottoms', 'Pants holgados, shorts de entrenamiento y joggers', 'GOLDEN ERA MOBILITY', 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=800', 3),
+('c4444444-4444-4444-4444-444444444444', 'Accesorios de Levantamiento', 'accesorios', 'Straps, muñequeras y calcetas tubulares', 'HEAVY CLUB ESSENTIALS', 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800', 4)
 ON CONFLICT (slug) DO NOTHING;
 
 -- Producto 1: Nolan Heavy Pump Cover

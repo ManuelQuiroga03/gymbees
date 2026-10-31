@@ -7,6 +7,8 @@ export interface Category {
   slug: string;
   description?: string;
   sortOrder: number;
+  imageUrl?: string;
+  tag?: string;
 }
 
 export interface ProductVariant {
