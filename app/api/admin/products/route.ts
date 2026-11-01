@@ -193,7 +193,7 @@ export async function PUT(req: Request) {
            ELSE $8::uuid 
          END,
          updated_at = NOW()
-       WHERE id = $7
+       WHERE id::text = $7
        RETURNING *`,
       [
         trimmedName,
@@ -247,7 +247,7 @@ export async function DELETE(req: Request) {
     }
 
     // Eliminar producto (ON DELETE CASCADE en variantes e inventario)
-    await query(`DELETE FROM products WHERE id = $1`, [id]);
+    await query(`DELETE FROM products WHERE id::text = $1`, [id]);
 
     return NextResponse.json({ success: true, message: 'Producto eliminado correctamente' });
   } catch (error: any) {
