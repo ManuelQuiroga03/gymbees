@@ -23,6 +23,7 @@ export default function AdminPage() {
   // Formulario nuevo producto
   const [showNewProductModal, setShowNewProductModal] = useState(false);
   const [newProdName, setNewProdName] = useState("");
+  const [newProdCategory, setNewProdCategory] = useState("c1111111-1111-1111-1111-111111111111");
   const [newProdPrice, setNewProdPrice] = useState("");
   const [newProdGsm, setNewProdGsm] = useState("240 GSM Algodón Peinado");
   const [newProdFit, setNewProdFit] = useState("oversized");
@@ -42,6 +43,7 @@ export default function AdminPage() {
   const [editPrice, setEditPrice] = useState("");
   const [editGsm, setEditGsm] = useState("");
   const [editFit, setEditFit] = useState("oversized");
+  const [editCategory, setEditCategory] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editImages, setEditImages] = useState<string[]>([]);
   const [editVariants, setEditVariants] = useState<any[]>([]);
@@ -253,6 +255,7 @@ export default function AdminPage() {
           materialGsm: newProdGsm,
           fitType: newProdFit,
           basePrice: price,
+          categoryId: newProdCategory,
           images: uploadedImages,
           variants,
         }),
@@ -281,6 +284,7 @@ export default function AdminPage() {
     setEditGsm(product.material_gsm || "240 GSM Algodón Peinado");
     setEditFit(product.fit_type || "oversized");
     setEditDesc(product.description || "");
+    setEditCategory(product.category_id || "");
     setEditImages(parseImages(product.images));
     setEditVariants(
       product.variants && product.variants.length > 0
@@ -314,6 +318,7 @@ export default function AdminPage() {
           id: editingProduct.id,
           name: editName.trim(),
           basePrice: price,
+          categoryId: editCategory,
           materialGsm: editGsm,
           fitType: editFit,
           description: editDesc,
@@ -979,6 +984,41 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Categoría / Colección
+                  </label>
+                  <select
+                    value={newProdCategory}
+                    onChange={(e) => setNewProdCategory(e.target.value)}
+                    className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none font-bold"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Corte / Silueta
+                  </label>
+                  <select
+                    value={newProdFit}
+                    onChange={(e) => setNewProdFit(e.target.value)}
+                    className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none font-bold uppercase"
+                  >
+                    <option value="oversized">Oversized</option>
+                    <option value="compression">Compresión</option>
+                    <option value="regular">Regular</option>
+                    <option value="athletic">Athletic</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
                     Precio Base ($ MXN)
                   </label>
                   <input
@@ -1144,6 +1184,42 @@ export default function AdminPage() {
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Categoría / Colección
+                  </label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none font-bold"
+                  >
+                    <option value="">-- Sin Categoría --</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Corte / Silueta
+                  </label>
+                  <select
+                    value={editFit}
+                    onChange={(e) => setEditFit(e.target.value)}
+                    className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none font-bold uppercase"
+                  >
+                    <option value="oversized">Oversized</option>
+                    <option value="compression">Compresión</option>
+                    <option value="regular">Regular</option>
+                    <option value="athletic">Athletic</option>
+                  </select>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

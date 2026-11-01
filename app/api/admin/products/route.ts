@@ -148,7 +148,7 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { id, name, description, materialGsm, fitType, basePrice, images, variants } = body;
+    const { id, name, description, materialGsm, fitType, basePrice, images, variants, categoryId } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'El ID del producto es obligatorio' }, { status: 400 });
@@ -170,6 +170,8 @@ export async function PUT(req: Request) {
       imagesJson = JSON.stringify(validImages);
     }
 
+    const validCategoryId = categoryId && typeof categoryId === 'string' && categoryId.length === 36 ? categoryId : null;
+
     // Actualizar producto en Postgres
     const updatedRows = await query(
       `UPDATE products 
@@ -180,6 +182,7 @@ export async function PUT(req: Request) {
          fit_type = COALESCE($4, fit_type),
          base_price = COALESCE($5, base_price),
          images = CASE WHEN $6::jsonb IS NOT NULL THEN $6::jsonb ELSE images END,
+         category_id = CASE WHEN $8::uuid IS NOT NULL THEN $8::uuid ELSE category_id END,
          updated_at = NOW()
        WHERE id = $7
        RETURNING *`,
@@ -191,6 +194,7 @@ export async function PUT(req: Request) {
         numericPrice,
         imagesJson,
         id,
+        validCategoryId,
       ]
     );
 
