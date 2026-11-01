@@ -17,14 +17,14 @@ export async function PATCH(req: Request) {
 
     if (stockQuantity !== undefined) {
       await query(
-        `UPDATE inventory SET stock_quantity = $1, updated_at = now() WHERE variant_id = $2`,
+        `UPDATE inventory SET stock_quantity = $1, updated_at = now() WHERE variant_id::text = $2::text`,
         [Math.max(0, Number(stockQuantity)), variantId]
       );
     }
 
     if (price !== undefined) {
       await query(
-        `UPDATE product_variants SET price_override = $1 WHERE id = $2`,
+        `UPDATE product_variants SET price_override = $1 WHERE id::text = $2::text`,
         [Number(price), variantId]
       );
     }

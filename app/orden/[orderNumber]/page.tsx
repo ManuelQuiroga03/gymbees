@@ -29,7 +29,7 @@ export default async function OrderSuccessPage({ params, searchParams }: OrderPa
 
     if (orders.length > 0) {
       items = await query(
-        `SELECT * FROM order_items WHERE order_id = $1`,
+        `SELECT * FROM order_items WHERE order_id::text = $1::text`,
         [orders[0].id]
       );
     }

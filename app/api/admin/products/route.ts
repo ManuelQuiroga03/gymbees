@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     // 1. Insertar producto en base de datos
     const prodRows = await query(
       `INSERT INTO products (name, slug, category_id, description, material_gsm, fit_type, base_price, images)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       VALUES ($1, $2, ($3)::uuid, $4, $5, $6, $7, $8)
        RETURNING id, name, slug, base_price, images`,
       [
         trimmedName,
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
 
       const varRows = await query(
         `INSERT INTO product_variants (product_id, sku, size, color_name, color_hex, price_override)
-         VALUES ($1, $2, $3, $4, $5, $6)
+         VALUES (($1)::uuid, $2, $3, $4, $5, $6)
          ON CONFLICT (product_id, size, color_name) DO UPDATE 
          SET price_override = EXCLUDED.price_override
          RETURNING id`,
@@ -130,7 +130,7 @@ export async function POST(req: Request) {
 
       await query(
         `INSERT INTO inventory (variant_id, stock_quantity, low_stock_threshold)
-         VALUES ($1, $2, 3)
+         VALUES (($1)::uuid, $2, 3)
          ON CONFLICT (variant_id) DO UPDATE SET stock_quantity = $2`,
         [variantId, stockQty]
       );
@@ -218,7 +218,7 @@ export async function PUT(req: Request) {
           await query(
             `UPDATE inventory 
              SET stock_quantity = $1, updated_at = NOW() 
-             WHERE variant_id = $2`,
+             WHERE variant_id::text = $2::text`,
             [Math.max(0, Number(v.stock)), v.id]
           );
         }

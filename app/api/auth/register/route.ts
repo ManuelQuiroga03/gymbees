@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     // Sincronizar con tabla profiles
     await query(
       `INSERT INTO profiles (id, email, full_name, phone, role)
-       VALUES ($1, $2, $3, $4, 'customer')
+       VALUES (($1)::uuid, $2, $3, $4, 'customer')
        ON CONFLICT (id) DO NOTHING`,
       [newUser.id, newUser.email, newUser.full_name, phone || null]
     );

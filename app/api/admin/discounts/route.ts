@@ -63,7 +63,7 @@ export async function PATCH(req: Request) {
     const { id, isActive } = await req.json();
 
     await query(
-      `UPDATE discount_codes SET is_active = $1 WHERE id = $2`,
+      `UPDATE discount_codes SET is_active = $1 WHERE id::text = $2::text`,
       [isActive, id]
     );
 

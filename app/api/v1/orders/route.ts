@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { pool, query } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { createMercadoPagoPreference } from '@/lib/mercadopago';
+import { isUUID } from '@/lib/validations';
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
       orders = await query(`SELECT * FROM orders ORDER BY created_at DESC`);
     } else {
       orders = await query(
-        `SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC`,
+        `SELECT * FROM orders WHERE user_id::text = $1::text ORDER BY created_at DESC`,
         [user.id]
       );
     }
@@ -63,13 +64,18 @@ export async function POST(req: Request) {
         const { variantId, quantity } = item;
         const qty = Number(quantity) || 1;
 
+        if (!isUUID(variantId)) {
+          await client.query('ROLLBACK');
+          return NextResponse.json({ error: 'Identificador de variante no válido' }, { status: 400 });
+        }
+
         const variantRes = await client.query(
           `SELECT v.id, v.sku, v.size, v.color_name, v.price_override, p.name, p.base_price,
                   i.stock_quantity, i.reserved_quantity
            FROM product_variants v
-           JOIN products p ON v.product_id = p.id
-           JOIN inventory i ON v.id = i.variant_id
-           WHERE v.id = $1 AND v.is_active = true
+           JOIN products p ON v.product_id::text = p.id::text
+           JOIN inventory i ON v.id::text = i.variant_id::text
+           WHERE v.id::text = $1::text AND v.is_active = true
            FOR UPDATE`,
           [variantId]
         );
@@ -113,7 +119,7 @@ export async function POST(req: Request) {
         await client.query(
           `UPDATE inventory 
            SET stock_quantity = stock_quantity - $1, updated_at = now() 
-           WHERE variant_id = $2`,
+           WHERE variant_id::text = $2::text`,
           [qty, variantId]
         );
       }
@@ -145,7 +151,7 @@ export async function POST(req: Request) {
             appliedCode = disc.code;
 
             await client.query(
-              `UPDATE discount_codes SET uses_count = uses_count + 1 WHERE id = $1`,
+              `UPDATE discount_codes SET uses_count = uses_count + 1 WHERE id::text = $1::text`,
               [disc.id]
             );
           }
@@ -183,7 +189,7 @@ export async function POST(req: Request) {
         `INSERT INTO orders (
           order_number, user_id, customer_email, status, payment_status,
           payment_provider, subtotal, shipping_cost, discount, discount_code, total, shipping_address
-        ) VALUES ($1, $2, $3, 'pending', 'unpaid', 'mercadopago', $4, $5, $6, $7, $8, $9)
+        ) VALUES ($1, ($2)::uuid, $3, 'pending', 'unpaid', 'mercadopago', $4, $5, $6, $7, $8, $9)
         RETURNING id, order_number, total, created_at`,
         [
           orderNumber,
@@ -204,7 +210,7 @@ export async function POST(req: Request) {
       for (const item of orderItemsToInsert) {
         await client.query(
           `INSERT INTO order_items (order_id, variant_id, product_name, variant_info, unit_price, quantity, total_price)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+           VALUES (($1)::uuid, ($2)::uuid, $3, $4, $5, $6, $7)`,
           [
             createdOrder.id,
             item.variantId,

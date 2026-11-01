@@ -14,7 +14,7 @@ export default async function MisPedidosPage() {
   }
 
   const orders = await query(
-    `SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC`,
+    `SELECT * FROM orders WHERE user_id::text = $1::text ORDER BY created_at DESC`,
     [user.id]
   );
 

@@ -278,7 +278,7 @@ const FALLBACK_PRODUCTS: Product[] = [
 function mapDatabaseProducts(rawProducts: any[], rawVariants: any[]): Product[] {
   return rawProducts.map((p) => {
     const variants: ProductVariant[] = rawVariants
-      .filter((v) => v.product_id === p.id)
+      .filter((v) => String(v.product_id) === String(p.id))
       .map((v) => {
         const stock = v.stock_quantity || 0;
         const lowThreshold = v.low_stock_threshold || 3;
@@ -329,7 +329,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
         p.images,
         c.name as category_name
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN categories c ON p.category_id::text = c.id::text
       WHERE p.is_active = true
       ORDER BY p.created_at DESC
     `);
@@ -351,7 +351,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
         i.stock_quantity,
         i.low_stock_threshold
       FROM product_variants v
-      LEFT JOIN inventory i ON v.id = i.variant_id
+      LEFT JOIN inventory i ON v.id::text = i.variant_id::text
       WHERE v.is_active = true
       ORDER BY v.size ASC
     `);
@@ -379,7 +379,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         p.images,
         c.name as category_name
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN categories c ON p.category_id::text = c.id::text
       WHERE p.slug = $1 AND p.is_active = true
       LIMIT 1
       `,
@@ -407,8 +407,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         i.stock_quantity,
         i.low_stock_threshold
       FROM product_variants v
-      LEFT JOIN inventory i ON v.id = i.variant_id
-      WHERE v.product_id = $1 AND v.is_active = true
+      LEFT JOIN inventory i ON v.id::text = i.variant_id::text
+      WHERE v.product_id::text = $1::text AND v.is_active = true
       ORDER BY v.size ASC
       `,
       [product.id]
@@ -528,11 +528,11 @@ export async function getProductsByCategory(categorySlug: string): Promise<{ cat
         p.images,
         c.name as category_name
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.category_id = $1 AND p.is_active = true
+      LEFT JOIN categories c ON p.category_id::text = c.id::text
+      WHERE (p.category_id::text = $1::text OR c.slug = $2) AND p.is_active = true
       ORDER BY p.created_at DESC
       `,
-      [category.id]
+      [category.id, categorySlug]
     );
 
     if (!rawProducts || rawProducts.length === 0) {
@@ -553,7 +553,7 @@ export async function getProductsByCategory(categorySlug: string): Promise<{ cat
         i.stock_quantity,
         i.low_stock_threshold
       FROM product_variants v
-      LEFT JOIN inventory i ON v.id = i.variant_id
+      LEFT JOIN inventory i ON v.id::text = i.variant_id::text
       WHERE v.is_active = true
       ORDER BY v.size ASC
     `);
