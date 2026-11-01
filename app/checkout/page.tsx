@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,7 +22,16 @@ import {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, subtotal, freeShippingThreshold, clearCart } = useCart();
+  const {
+    items,
+    subtotal,
+    freeShippingThreshold,
+    clearCart,
+    appliedDiscount: cartDiscount,
+    discountAmount: cartDiscountAmount,
+    applyDiscount: cartApplyDiscount,
+    removeDiscount: cartRemoveDiscount,
+  } = useCart();
 
   // Datos de envío
   const [email, setEmail] = useState("");
@@ -112,6 +121,20 @@ export default function CheckoutPage() {
     return true;
   };
 
+  // Sincronizar cupón del carrito con checkout
+  useEffect(() => {
+    if (cartDiscount) {
+      setAppliedDiscount({
+        code: cartDiscount.code,
+        discountAmount: cartDiscountAmount,
+        discountType: cartDiscount.discountType,
+        discountValue: cartDiscount.discountValue,
+      });
+    } else {
+      setAppliedDiscount(null);
+    }
+  }, [cartDiscount, cartDiscountAmount]);
+
   // Validar cupón
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,30 +143,13 @@ export default function CheckoutPage() {
     setValidatingCoupon(true);
     setCouponError(null);
 
-    try {
-      const res = await fetch("/api/discount/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: couponCode, subtotal }),
-      });
+    const res = await cartApplyDiscount(couponCode);
+    setValidatingCoupon(false);
 
-      const data = await res.json();
-      if (!res.ok || !data.valid) {
-        throw new Error(data.error || "Código inválido");
-      }
-
-      setAppliedDiscount({
-        code: data.code,
-        discountAmount: data.discountAmount,
-        discountType: data.discountType,
-        discountValue: data.discountValue,
-      });
+    if (res.success) {
       setCouponCode("");
-    } catch (err: any) {
-      setCouponError(err.message);
-      setAppliedDiscount(null);
-    } finally {
-      setValidatingCoupon(false);
+    } else {
+      setCouponError(res.error || "Código inválido");
     }
   };
 
