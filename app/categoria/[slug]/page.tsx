@@ -3,6 +3,8 @@ import { Metadata } from "next";
 import { getProductsByCategory, getAllCategories } from "@/lib/products";
 import { CategoryView } from "@/components/category/CategoryView";
 
+export const revalidate = 0; // Datos frescos en cada petición al editar productos o categorías
+
 interface CategoryPageProps {
   params: Promise<{
     slug: string;

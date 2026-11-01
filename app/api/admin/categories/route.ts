@@ -3,6 +3,9 @@ import { query } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { getAllCategories } from '@/lib/products';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const user = await getCurrentUser();

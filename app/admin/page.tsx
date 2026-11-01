@@ -83,10 +83,10 @@ export default function AdminPage() {
     setLoading(true);
     try {
       const [prodRes, discRes, ordRes, catRes] = await Promise.all([
-        fetch("/api/admin/products"),
-        fetch("/api/admin/discounts"),
-        fetch("/api/v1/orders"),
-        fetch("/api/admin/categories"),
+        fetch("/api/admin/products", { cache: "no-store" }),
+        fetch("/api/admin/discounts", { cache: "no-store" }),
+        fetch("/api/v1/orders", { cache: "no-store" }),
+        fetch("/api/admin/categories", { cache: "no-store" }),
       ]);
 
       if (prodRes.ok) {

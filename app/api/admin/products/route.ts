@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const user = await getCurrentUser();
   if (!user || user.role !== 'admin') {
@@ -170,7 +173,9 @@ export async function PUT(req: Request) {
       imagesJson = JSON.stringify(validImages);
     }
 
-    const validCategoryId = categoryId && typeof categoryId === 'string' && categoryId.length === 36 ? categoryId : null;
+    const categoryParam = categoryId !== undefined
+      ? (typeof categoryId === 'string' && categoryId.length === 36 ? categoryId : null)
+      : '__UNCHANGED__';
 
     // Actualizar producto en Postgres
     const updatedRows = await query(
@@ -182,7 +187,11 @@ export async function PUT(req: Request) {
          fit_type = COALESCE($4, fit_type),
          base_price = COALESCE($5, base_price),
          images = CASE WHEN $6::jsonb IS NOT NULL THEN $6::jsonb ELSE images END,
-         category_id = CASE WHEN $8::uuid IS NOT NULL THEN $8::uuid ELSE category_id END,
+         category_id = CASE 
+           WHEN $8 = '__UNCHANGED__' THEN category_id 
+           WHEN $8 IS NULL OR $8 = '' THEN NULL 
+           ELSE $8::uuid 
+         END,
          updated_at = NOW()
        WHERE id = $7
        RETURNING *`,
@@ -194,7 +203,7 @@ export async function PUT(req: Request) {
         numericPrice,
         imagesJson,
         id,
-        validCategoryId,
+        categoryParam,
       ]
     );
 
