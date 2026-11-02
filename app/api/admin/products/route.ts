@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   const products = await query(`
-    SELECT p.*, c.name as category_name,
+    SELECT p.*, c.name as category_name, c.slug as category_slug,
       COALESCE(
         json_agg(
           CASE WHEN v.id IS NOT NULL THEN
@@ -31,10 +31,10 @@ export async function GET() {
         '[]'::json
       ) as variants
     FROM products p
-    LEFT JOIN categories c ON p.category_id = c.id
-    LEFT JOIN product_variants v ON p.id = v.product_id
-    LEFT JOIN inventory i ON v.id = i.variant_id
-    GROUP BY p.id, c.name
+    LEFT JOIN categories c ON p.category_id::text = c.id::text
+    LEFT JOIN product_variants v ON p.id::text = v.product_id::text
+    LEFT JOIN inventory i ON v.id::text = i.variant_id::text
+    GROUP BY p.id, c.name, c.slug
     ORDER BY p.created_at DESC
   `);
 

@@ -19,6 +19,7 @@ export default function AdminPage() {
   const [discounts, setDiscounts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("c1111111-1111-1111-1111-111111111111");
 
   // Formulario nuevo producto
   const [showNewProductModal, setShowNewProductModal] = useState(false);
@@ -79,6 +80,48 @@ export default function AdminPage() {
     return [];
   };
 
+  // Abrir modal de nuevo producto con defaults según categoría
+  const openNewProductModalForCategory = (catId?: string) => {
+    const targetCatId = catId || selectedCategoryId || categories[0]?.id || "c1111111-1111-1111-1111-111111111111";
+    const cat = categories.find((c) => String(c.id) === String(targetCatId));
+    const slug = (cat?.slug || "").toLowerCase();
+
+    setNewProdCategory(targetCatId);
+    setNewProdName("");
+    setNewProdPrice("");
+    setUploadedImages([]);
+    setNewProdDesc("");
+
+    if (slug.includes("compresion")) {
+      setNewProdGsm("220 GSM Spandex Blend");
+      setNewProdFit("compression");
+      setSizesStock({ S: 10, M: 20, L: 15, XL: 5 });
+    } else if (slug.includes("bottom") || slug.includes("baggy")) {
+      setNewProdGsm("320 GSM French Terry");
+      setNewProdFit("regular");
+      setSizesStock({ S: 10, M: 20, L: 15, XL: 10 });
+    } else if (slug.includes("accesorio")) {
+      setNewProdGsm("Nylon Reforzado");
+      setNewProdFit("athletic");
+      setSizesStock({ OS: 30 });
+    } else {
+      setNewProdGsm("240 GSM Algodón Peinado");
+      setNewProdFit("oversized");
+      setSizesStock({ S: 15, M: 20, L: 15, XL: 8 });
+    }
+
+    setShowNewProductModal(true);
+  };
+
+  // Conteo de prendas activas por categoría
+  const getCategoryProductCount = (catId: string, catSlug?: string) => {
+    return products.filter((p) => {
+      if (p.category_id && String(p.category_id) === String(catId)) return true;
+      if (p.category_slug && catSlug && p.category_slug === catSlug) return true;
+      return false;
+    }).length;
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -103,7 +146,11 @@ export default function AdminPage() {
       }
       if (catRes.ok) {
         const cats = await catRes.json();
-        setCategories(Array.isArray(cats) ? cats : []);
+        const loadedCats = Array.isArray(cats) ? cats : [];
+        setCategories(loadedCats);
+        if (loadedCats.length > 0) {
+          setSelectedCategoryId((prev) => (prev ? prev : loadedCats[0].id));
+        }
       }
     } catch (err) {
       console.error("Error al cargar datos de admin:", err);
@@ -529,127 +576,274 @@ export default function AdminPage() {
         {/* ========================================================================= */}
         {/* TAB 1: PRENDAS & DROPS */}
         {/* ========================================================================= */}
-        {activeTab === "products" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="font-display text-3xl uppercase tracking-wider text-foreground">
-                  Catálogo Activo en Tienda
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Gestiona prendas, edita fotos, ajusta precios y existencias en tiempo real.
-                </p>
-              </div>
+        {activeTab === "products" && (() => {
+          const activeCategory =
+            categories.find((c) => String(c.id) === String(selectedCategoryId)) || categories[0];
 
-              <div className="flex gap-3">
-                <button
-                  onClick={loadData}
-                  className="p-2.5 bg-surface border border-border-subtle rounded-xl text-muted-foreground hover:text-foreground transition-colors"
-                  title="Recargar datos"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setShowNewProductModal(true)}
-                  className="bg-primary hover:bg-white text-primary-foreground font-black text-xs uppercase tracking-widest px-5 py-2.5 rounded-xl shadow-glow transition-all flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4 stroke-[3]" />
-                  <span>Publicar Nuevo Drop</span>
-                </button>
-              </div>
-            </div>
+          const filteredProducts = products.filter((p) => {
+            if (!activeCategory) return true;
+            if (p.category_id && String(p.category_id) === String(activeCategory.id)) return true;
+            if (p.category_slug && p.category_slug === activeCategory.slug) return true;
+            if (
+              p.category_name &&
+              activeCategory.name &&
+              p.category_name.toLowerCase().includes(activeCategory.name.toLowerCase().slice(0, 6))
+            )
+              return true;
+            return false;
+          });
 
-            {/* List of Products */}
-            <div className="grid grid-cols-1 gap-6">
-              {products.map((p) => {
-                const prodImages = parseImages(p.images);
-                return (
-                  <div
-                    key={p.id}
-                    className="bg-surface border border-border-subtle rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between transition-all hover:border-border-strong"
-                  >
-                    <div className="flex items-center gap-5">
-                      {/* Thumbnail con img nativo para renderizado infalible */}
-                      <div className="w-20 h-24 bg-surface-elevated border border-border-subtle rounded-xl flex items-center justify-center shrink-0 overflow-hidden relative">
-                        {prodImages.length > 0 ? (
-                          <img
-                            src={prodImages[0]}
-                            alt={p.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center text-muted-foreground">
-                            <ImageIcon className="w-6 h-6 opacity-40 mb-1" />
-                            <span className="font-display text-[10px]">SIN FOTO</span>
-                          </div>
-                        )}
-                      </div>
+          const totalStockInActiveCategory = filteredProducts.reduce((acc, p) => {
+            const pStock = (p.variants || []).reduce(
+              (sum: number, v: any) => sum + (Number(v.stock) || 0),
+              0
+            );
+            return acc + pStock;
+          }, 0);
 
-                      <div>
-                        <span className="text-[10px] font-mono font-bold tracking-widest text-primary uppercase">
-                          {p.category_name || "DROP EXCLUSIVO"} • {p.material_gsm}
-                        </span>
-                        <h3 className="font-display text-2xl uppercase text-foreground leading-tight">
-                          {p.name}
-                        </h3>
-                        <p className="text-sm font-extrabold text-foreground mt-0.5">
-                          {formatPrice(p.base_price)}
-                        </p>
-                        <span className="text-[10px] text-muted-foreground font-mono block mt-1">
-                          {prodImages.length} fotografía{prodImages.length === 1 ? "" : "s"} vinculada{prodImages.length === 1 ? "" : "s"}
-                        </span>
-                      </div>
-                    </div>
+          return (
+            <div className="space-y-7">
+              {/* 1. Selector de Colecciones / Categorías (Cards Visuales) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 font-mono">
+                    <Layers className="w-3.5 h-3.5 text-primary" />
+                    <span>Colecciones Activas ({categories.length})</span>
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-mono hidden sm:inline">
+                    Selecciona una tarjeta para gestionar sus prendas y publicar drops
+                  </span>
+                </div>
 
-                    {/* Controles de Acción y Stock */}
-                    <div className="w-full md:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                      {/* Tallas y Stock */}
-                      <div className="flex flex-wrap items-center gap-2 bg-surface-elevated p-2.5 rounded-xl border border-border-subtle">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mr-1">
-                          STOCK:
-                        </span>
-                        {p.variants?.map((v: any) => (
-                          <div
-                            key={v.id}
-                            className="flex items-center gap-1.5 bg-background px-2.5 py-1.5 rounded-lg border border-border-subtle text-xs"
-                          >
-                            <span className="font-bold text-foreground">{v.size}:</span>
-                            <span className={`font-mono font-black ${v.stock <= 3 ? "text-amber-400" : "text-foreground"}`}>
-                              {v.stock}
-                            </span>
-                            <div className="flex items-center gap-0.5 ml-1">
-                              <button
-                                onClick={() => handleUpdateStock(v.id, v.stock, -1)}
-                                className="w-4 h-4 bg-surface hover:bg-border-subtle rounded flex items-center justify-center text-muted-foreground hover:text-foreground text-[10px] font-bold"
-                              >
-                                -
-                              </button>
-                              <button
-                                onClick={() => handleUpdateStock(v.id, v.stock, 1)}
-                                className="w-4 h-4 bg-surface hover:bg-border-subtle rounded flex items-center justify-center text-muted-foreground hover:text-foreground text-[10px] font-bold"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                  {categories.map((cat) => {
+                    const isSelected = String(cat.id) === String(selectedCategoryId);
+                    const count = getCategoryProductCount(cat.id, cat.slug);
 
-                      {/* Botón Editar Drop Completo */}
-                      <button
-                        onClick={() => openEditModal(p)}
-                        className="bg-surface-elevated hover:bg-border-subtle border border-border-subtle hover:border-border-strong text-foreground text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm shrink-0"
+                    return (
+                      <div
+                        key={cat.id}
+                        onClick={() => setSelectedCategoryId(cat.id)}
+                        className={`relative p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-center gap-3.5 group select-none ${
+                          isSelected
+                            ? "bg-surface-elevated border-primary shadow-[0_0_20px_rgba(234,179,8,0.18)] ring-1 ring-primary/50"
+                            : "bg-surface/70 border-border-subtle hover:border-border-strong hover:bg-surface-elevated/60 opacity-75 hover:opacity-100"
+                        }`}
                       >
-                        <Edit3 className="w-3.5 h-3.5 text-primary" />
-                        <span>Editar Drop &amp; Fotos</span>
-                      </button>
-                    </div>
+                        {/* Miniatura de la portada */}
+                        <div className="w-13 h-16 bg-background border border-border-subtle rounded-xl overflow-hidden shrink-0 relative flex items-center justify-center">
+                          {cat.imageUrl ? (
+                            <img
+                              src={cat.imageUrl}
+                              alt={cat.name}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          ) : (
+                            <Layers className="w-5 h-5 text-muted-foreground/40" />
+                          )}
+                        </div>
+
+                        {/* Información de la categoría */}
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[9px] font-mono font-bold tracking-wider text-primary uppercase block truncate">
+                            {cat.tag || "DROP OFICIAL"}
+                          </span>
+                          <h4 className="font-display text-base uppercase text-foreground leading-tight truncate mt-0.5">
+                            {cat.name}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span
+                              className={`text-[10px] font-mono px-2 py-0.5 rounded-md border ${
+                                count > 0
+                                  ? "bg-primary/10 border-primary/20 text-primary font-bold"
+                                  : "bg-background border-border-subtle text-muted-foreground"
+                              }`}
+                            >
+                              {count} {count === 1 ? "prenda" : "prendas"}
+                            </span>
+                            {isSelected && (
+                              <span className="text-[9px] font-black tracking-widest uppercase text-emerald-400 font-mono flex items-center gap-1">
+                                ● ACTIVA
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Cabecera Contextual de la Colección Seleccionada */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-3 border-t border-border-subtle/60">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
+                      COLECCIÓN ACTIVA
+                    </span>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {filteredProducts.length}{" "}
+                      {filteredProducts.length === 1 ? "prenda" : "prendas"} •{" "}
+                      {totalStockInActiveCategory} pzas en almacén
+                    </span>
                   </div>
-                );
-              })}
+                  <h2 className="font-display text-3xl uppercase tracking-wider text-foreground mt-1">
+                    {activeCategory?.name || "Colección Seleccionada"}
+                  </h2>
+                  <p className="text-xs text-muted-foreground max-w-xl">
+                    {activeCategory?.description ||
+                      "Gestiona prendas, edita fotos y ajusta existencias en tiempo real."}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                  <button
+                    onClick={loadData}
+                    className="p-3 bg-surface border border-border-subtle rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition-colors"
+                    title="Recargar datos"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => openNewProductModalForCategory(activeCategory?.id)}
+                    className="bg-primary hover:bg-white text-primary-foreground font-black text-xs uppercase tracking-widest px-5 py-3 rounded-xl shadow-glow transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                    <span>
+                      Publicar en {activeCategory?.name?.split(" ")[0] || "Colección"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 3. Listado de Prendas de la Colección o Empty State */}
+              {filteredProducts.length === 0 ? (
+                <div className="bg-surface border border-dashed border-border-subtle rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-surface-elevated border border-border-subtle flex items-center justify-center text-muted-foreground">
+                    <Package className="w-8 h-8 opacity-40 text-primary" />
+                  </div>
+                  <div className="space-y-1.5 max-w-sm">
+                    <h3 className="font-display text-xl uppercase tracking-wider text-foreground">
+                      Aún no hay prendas en {activeCategory?.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Esta colección está lista para recibir su primer lanzamiento oficial. Al
+                      publicar aquí, la categoría quedará asignada por defecto.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => openNewProductModalForCategory(activeCategory?.id)}
+                    className="bg-primary hover:bg-white text-primary-foreground font-black text-xs uppercase tracking-widest px-6 py-3 rounded-xl shadow-glow transition-all flex items-center gap-2 active:scale-95"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                    <span>
+                      Publicar Primer Drop en{" "}
+                      {activeCategory?.name?.split(" ")[0] || "esta colección"}
+                    </span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {filteredProducts.map((p) => {
+                    const prodImages = parseImages(p.images);
+                    return (
+                      <div
+                        key={p.id}
+                        className="bg-surface border border-border-subtle rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row gap-5 sm:gap-6 items-start md:items-center justify-between transition-all hover:border-border-strong group"
+                      >
+                        <div className="flex items-center gap-4 sm:gap-5 min-w-0">
+                          {/* Thumbnail con img nativo para renderizado infalible */}
+                          <div className="w-20 h-24 sm:w-22 sm:h-26 bg-surface-elevated border border-border-subtle rounded-xl flex items-center justify-center shrink-0 overflow-hidden relative">
+                            {prodImages.length > 0 ? (
+                              <img
+                                src={prodImages[0]}
+                                alt={p.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                <ImageIcon className="w-6 h-6 opacity-40 mb-1" />
+                                <span className="font-display text-[10px]">SIN FOTO</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-mono font-bold tracking-widest text-primary uppercase block truncate">
+                              {p.category_name || activeCategory?.name || "DROP EXCLUSIVO"} •{" "}
+                              {p.material_gsm}
+                            </span>
+                            <h3 className="font-display text-xl sm:text-2xl uppercase text-foreground leading-tight truncate mt-0.5">
+                              {p.name}
+                            </h3>
+                            <p className="text-sm font-extrabold text-foreground mt-0.5 font-mono">
+                              {formatPrice(p.base_price)}
+                            </p>
+                            <span className="text-[10px] text-muted-foreground font-mono block mt-1">
+                              {prodImages.length} fotografía
+                              {prodImages.length === 1 ? "" : "s"} vinculada
+                              {prodImages.length === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Controles de Acción y Stock */}
+                        <div className="w-full md:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-3.5">
+                          {/* Tallas y Stock */}
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 bg-surface-elevated p-2 sm:p-2.5 rounded-xl border border-border-subtle">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mr-1 font-mono">
+                              STOCK:
+                            </span>
+                            {p.variants?.map((v: any) => (
+                              <div
+                                key={v.id}
+                                className="flex items-center gap-1.5 bg-background px-2 sm:px-2.5 py-1.5 rounded-lg border border-border-subtle text-xs"
+                              >
+                                <span className="font-bold text-foreground font-mono">
+                                  {v.size}:
+                                </span>
+                                <span
+                                  className={`font-mono font-black ${
+                                    v.stock <= 3 ? "text-amber-400" : "text-foreground"
+                                  }`}
+                                >
+                                  {v.stock}
+                                </span>
+                                <div className="flex items-center gap-0.5 ml-1">
+                                  <button
+                                    onClick={() => handleUpdateStock(v.id, v.stock, -1)}
+                                    className="w-4 h-4 bg-surface hover:bg-border-subtle rounded flex items-center justify-center text-muted-foreground hover:text-foreground text-[10px] font-bold"
+                                  >
+                                    -
+                                  </button>
+                                  <button
+                                    onClick={() => handleUpdateStock(v.id, v.stock, 1)}
+                                    className="w-4 h-4 bg-surface hover:bg-border-subtle rounded flex items-center justify-center text-muted-foreground hover:text-foreground text-[10px] font-bold"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Botón Editar Drop Completo */}
+                          <button
+                            onClick={() => openEditModal(p)}
+                            className="bg-surface-elevated hover:bg-border-subtle border border-border-subtle hover:border-border-strong text-foreground text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-sm shrink-0"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-primary" />
+                            <span>Editar Drop</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ========================================================================= */}
         {/* TAB 2: CUPONES DE DESCUENTO */}
@@ -952,7 +1146,7 @@ export default function AdminPage() {
             <div className="flex justify-between items-center border-b border-border-subtle pb-4">
               <div>
                 <h3 className="font-display text-3xl uppercase tracking-wider text-foreground">
-                  PUBLICAR NUEVO DROP
+                  PUBLICAR EN {categories.find((c) => String(c.id) === String(newProdCategory))?.name?.toUpperCase() || "NUEVO DROP"}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Ingresa las especificaciones de tejido, gramaje y sube la foto del producto.
@@ -983,13 +1177,18 @@ export default function AdminPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Categoría / Colección
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Colección Destino
+                    </label>
+                    <span className="text-[10px] font-mono text-primary font-bold">
+                      ● Preseleccionada
+                    </span>
+                  </div>
                   <select
                     value={newProdCategory}
                     onChange={(e) => setNewProdCategory(e.target.value)}
-                    className="w-full bg-background border border-border-subtle focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none font-bold"
+                    className="w-full bg-background border border-primary/50 focus:border-primary rounded-xl py-3 px-4 text-xs text-foreground outline-none font-bold"
                   >
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
